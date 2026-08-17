@@ -484,10 +484,23 @@ const BG_SLUGS = ['home','room','kitchen','washroom','outside','hall'];
 function charPhotoFile(i){ return `photos/character-${CHAR_SLUGS[i]}.jpg`; }
 function charTagFile(i){ return `photos/character-${CHAR_SLUGS[i]}-tag.jpg`; }
 function bgPhotoFile(i){ return `photos/bg-${BG_SLUGS[i]}.jpg`; }
-/* Every <img> that shows a stored photo uses this so a missing file quietly
-   falls back to the placeholder instead of showing a broken-image icon. */
-function imgWithFallback(src){
-  return `onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';"`;
+/* Every <img> that shows a stored photo calls this on error. The manifest always asks for
+   ".jpg" first — if the actual file you dropped in is a ".jpeg" (or ".png"/".webp") instead,
+   this quietly retries those extensions before giving up and showing the placeholder, so you
+   never have to rename your files to match. */
+const PHOTO_EXT_FALLBACKS = ['.jpeg','.png','.webp'];
+function photoErrorHandler(img){
+  const src = img.getAttribute('src') || '';
+  const tried = Number(img.dataset.triedExt || '0');
+  // Only worth retrying for our own relative "photos/..." files, not data: URLs or the placeholder itself.
+  if(/^photos\//i.test(src) && tried < PHOTO_EXT_FALLBACKS.length){
+    img.dataset.triedExt = String(tried+1);
+    const base = src.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '');
+    img.src = base + PHOTO_EXT_FALLBACKS[tried];
+    return;
+  }
+  img.onerror = null;
+  img.src = PLACEHOLDER_PHOTO;
 }
 
 let state = {
@@ -771,7 +784,7 @@ function renderCharacters(){
     const card=document.createElement('div'); card.className='media-card selectable';
     card.innerHTML = `
       <div class="cap">${ch.name}</div>
-      <div class="media-photo">${ch.photo ? `<img src="${ch.photo}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';">` : ''}</div>
+      <div class="media-photo">${ch.photo ? `<img src="${ch.photo}" onerror="photoErrorHandler(this)">` : ''}</div>
       <div class="chip-row" style="margin-left:0;justify-content:center;margin-top:8px;gap:6px;">
         <button class="chip btn-sm" data-toggle-model="${i}" style="padding:5px 10px;font-size:0.72rem;">Character</button>
         ${ch.tagPhoto ? `<button class="chip btn-sm" data-toggle-tag="${i}" style="padding:5px 10px;font-size:0.72rem;">🏷️ Tag</button>` : ''}
@@ -802,7 +815,7 @@ function renderCharacters(){
   c6.innerHTML = `
     <input class="name-input-mini" id="c6NameInput" value="${state.character6.name}" placeholder="Name this character">
     <div class="media-photo" id="c6PhotoBox" style="cursor:pointer;">
-      ${state.character6.photo ? `<img src="${state.character6.photo}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';"><button class="edit-mini" id="c6EditBtn">edit</button>` : '➕'}
+      ${state.character6.photo ? `<img src="${state.character6.photo}" onerror="photoErrorHandler(this)"><button class="edit-mini" id="c6EditBtn">edit</button>` : '➕'}
     </div>
     <div class="chip-row" style="margin-left:0;justify-content:center;margin-top:8px;gap:6px;">
       <button class="chip btn-sm" id="c6ToggleModel" style="padding:5px 10px;font-size:0.72rem;">Character</button>
@@ -840,7 +853,7 @@ function renderBackgrounds(){
     const inSeq = state.bgSequence.includes(i);
     card.innerHTML = `
       <div class="cap">${bg.label}</div>
-      <div class="media-photo">${bg.photo ? `<img src="${bg.photo}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';">` : ''}</div>
+      <div class="media-photo">${bg.photo ? `<img src="${bg.photo}" onerror="photoErrorHandler(this)">` : ''}</div>
     `;
     card.classList.toggle('selected', inSeq);
     if(bg.photo){
@@ -888,7 +901,7 @@ function renderLines(){
     const ch = findCharByKey(line.charKey);
     const b=document.createElement('div'); b.className='line-block';
     b.innerHTML = `
-      <div class="line-avatar">${ch.photo?`<img src="${ch.photo}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';">`:'🐾'}</div>
+      <div class="line-avatar">${ch.photo?`<img src="${ch.photo}" onerror="photoErrorHandler(this)">`:'🐾'}</div>
       <div class="line-fields">
         <div class="line-top-row">
           <select data-char="${i}">${opts.map(o=>`<option value="${o.key}" ${o.key===line.charKey?'selected':''}>${o.name}</option>`).join('')}</select>
@@ -1180,14 +1193,21 @@ document.getElementById('zipBtn').addEventListener('click', async ()=>{
     // Photos are either a data: URL (fresh upload this session) or a "photos/x.jpg" file path
     // (the normal case now). File paths only work when this page is actually hosted — fetch()
     // can't read local files opened as file://, so we skip gracefully rather than fail the whole ZIP.
+    async function fetchWithExtFallback(src){
+      const candidates = [src, ...PHOTO_EXT_FALLBACKS.map(ext => src.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '') + ext)];
+      for(const url of candidates){
+        try{ const res = await fetch(url); if(res.ok) return res; }catch(e){ /* try next */ }
+      }
+      return null;
+    }
     async function addPhotoToZip(src, filename){
       if(!src) return;
       try{
         if(src.startsWith('data:')){
           imagesFolder.file(filename, src.split(',')[1], {base64:true});
         } else {
-          const res = await fetch(src);
-          if(!res.ok) throw new Error('fetch failed');
+          const res = await fetchWithExtFallback(src);
+          if(!res) throw new Error('fetch failed');
           const blob = await res.blob();
           imagesFolder.file(filename, blob);
         }
@@ -1315,7 +1335,7 @@ function renderAdminRefs(){
     html += `<div class="media-card" style="text-align:left;">
       <input class="name-input-mini" data-admin-name="${i}" value="${ch.name}" style="text-align:center;">
       <div class="media-photo ${ch.photo?'filled':''}" style="margin-top:8px;">
-        ${ch.photo?`<img src="${ch.photo}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';">`:'➕'}
+        ${ch.photo?`<img src="${ch.photo}" onerror="photoErrorHandler(this)">`:'➕'}
         <div style="position:absolute;bottom:5px;left:5px;right:5px;display:flex;gap:4px;justify-content:center;">
           ${ch.photo?`<button class="edit-mini" data-admin-edit="char:${i}">edit</button>`:''}
           <button class="edit-mini" data-admin-replace="char:${i}">${ch.photo?'replace':'upload'}</button>
@@ -1324,7 +1344,7 @@ function renderAdminRefs(){
       <div style="margin-top:8px;">
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;">Tag photo (optional)</div>
         <div class="media-photo ${ch.tagPhoto?'filled':''}" style="height:90px;">
-          ${ch.tagPhoto?`<img src="${ch.tagPhoto}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';">`:'➕'}
+          ${ch.tagPhoto?`<img src="${ch.tagPhoto}" onerror="photoErrorHandler(this)">`:'➕'}
           <div style="position:absolute;bottom:4px;left:4px;right:4px;display:flex;gap:4px;justify-content:center;">
             ${ch.tagPhoto?`<button class="edit-mini" data-admin-edit="tag:${i}">edit</button>`:''}
             <button class="edit-mini" data-admin-replace="tag:${i}">${ch.tagPhoto?'replace':'upload'}</button>
@@ -1341,7 +1361,7 @@ function renderAdminRefs(){
   state.backgrounds.forEach((bg,i)=>{
     html += `<div class="media-card"><div class="cap">${bg.label}</div>
       <div class="media-photo ${bg.photo?'filled':''}">
-        ${bg.photo?`<img src="${bg.photo}" onerror="this.onerror=null;this.src='${PLACEHOLDER_PHOTO}';">`:'➕'}
+        ${bg.photo?`<img src="${bg.photo}" onerror="photoErrorHandler(this)">`:'➕'}
         <div style="position:absolute;bottom:5px;left:5px;right:5px;display:flex;gap:4px;justify-content:center;">
           ${bg.photo?`<button class="edit-mini" data-admin-edit="bg:${i}">edit</button>`:''}
           <button class="edit-mini" data-admin-replace="bg:${i}">${bg.photo?'replace':'upload'}</button>
@@ -1380,17 +1400,27 @@ function openEditorFor(kind, idx, existingPhoto, allowed){
   currentEditor = { kind, idx };
   const launch = (dataUrl)=>{
     const img = new Image();
+    let extTries = 0;
     img.onload = ()=>{
       editorState.natW = img.naturalWidth; editorState.natH = img.naturalHeight;
       editorState.zoom = 100; editorState.rotate = 0; editorState.offsetX = 0; editorState.offsetY = 0;
       document.getElementById('zoomRange').value = 100; document.getElementById('rotateRange').value = 0;
       const editorImg = document.getElementById('editorImg');
-      editorImg.src = dataUrl;
+      editorImg.src = img.src;
       // Show the overlay BEFORE measuring it — a display:none modal has zero width,
       // which was silently turning every crop frame into a 0px box (and a black export).
       document.getElementById('editorOverlay').classList.add('show');
       renderAspectChips();
       setEditorAspect(editorState.aspect);
+    };
+    img.onerror = ()=>{
+      // Same "photos/x.jpg" vs "photos/x.jpeg" mismatch this page guards against elsewhere.
+      if(/^photos\//i.test(dataUrl) && extTries < PHOTO_EXT_FALLBACKS.length){
+        const base = dataUrl.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '');
+        img.src = base + PHOTO_EXT_FALLBACKS[extTries]; extTries++;
+      } else {
+        toast("Couldn't load that photo to edit it");
+      }
     };
     img.src = dataUrl;
   };
