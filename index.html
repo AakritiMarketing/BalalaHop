@@ -268,19 +268,48 @@
   <!-- STEP 8: script (last) -->
   <section class="step">
     <div class="step-head"><span class="step-num">6</span><h2>Script</h2></div>
-    <div class="step-sub">Paste your last script to continue the story, then refine it, add detail, and smooth the pacing before you finish it below.</div>
+    <div class="step-sub">Pick how you want to start, write it, then check the final script below before building the skeleton or the prompt.</div>
+
+    <div id="scriptDurationBlock" style="display:none;margin-bottom:18px;">
+      <div class="field" style="margin-top:0;"><label>Length for this script</label></div>
+      <div class="chip-row" id="scriptDurationRow"></div>
+      <div class="field" id="scriptCustomDurationField" style="display:none;">
+        <label>Custom length (e.g. "45 sec" or "2 min")</label>
+        <input type="text" id="scriptCustomDuration" placeholder="Type your own length">
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:0;"><label>How do you want to start?</label></div>
+    <div class="chip-row" id="scriptModeRow">
+      <button class="chip" data-mode="amaze">🎲 Amaze me</button>
+      <button class="chip" data-mode="topic">💡 Just a topic</button>
+      <button class="chip" data-mode="brief">📋 Brief outline</button>
+      <button class="chip" data-mode="full">🎬 Full script</button>
+    </div>
+    <div class="helper" id="scriptModeHelper" style="margin-left:0;margin-top:8px;">Pick "Just a topic" or "Brief outline" and Flow will develop it into a full scene; pick "Full script" if you're writing every line yourself.</div>
+
     <div class="field">
       <label>Your old script (optional)</label>
-      <textarea id="oldScript" placeholder="Paste the script from your last reel or video here — then carry it into the box below and continue, refine, and smooth it."></textarea>
+      <textarea id="oldScript" placeholder="Paste the script from your last reel or video here."></textarea>
     </div>
+    <div class="ai-row" style="margin-left:42px;">
+      <button class="btn btn-ghost btn-sm" id="continueOldBtn">➡️ Continue from this</button>
+      <span class="ai-status" style="font-size:0.78rem;color:var(--muted);">carries it into the draft below so you can pick up the story from there</span>
+    </div>
+
     <div class="field">
-      <label>Final draft</label>
-      <textarea id="finalScript" placeholder="Write or paste your finished script here." style="min-height:120px;"></textarea>
+      <label>Draft</label>
+      <textarea id="finalScript" placeholder="Write your topic, brief, or full script here — or use Amaze me above." style="min-height:120px;"></textarea>
     </div>
 
     <div class="final-script-box empty" id="finalScriptBox" oncontextmenu="return false;">
       <div class="fs-label">FINAL SCRIPT FOR THIS GENERATION — read only</div>
       <div class="fs-text" id="finalScriptDisplay">Nothing written yet — draft it above.</div>
+    </div>
+
+    <div class="ai-row" style="margin-left:42px;margin-top:16px;">
+      <button class="btn btn-ghost btn-sm" id="skeletonBtn">🧩 Build script skeleton</button>
+      <span class="ai-status" style="font-size:0.78rem;color:var(--muted);">splits your length into 8-second parts and lists which character (and reference photo) goes in each one</span>
     </div>
   </section>
 
@@ -310,7 +339,11 @@
 </main>
 
 <footer>
-  <a class="footer-logo" href="#" id="udesignLink" target="_blank" rel="noopener"><span class="dot"></span> U-Design</a>
+  <a class="footer-logo" href="#" id="udesignLink" target="_blank" rel="noopener">
+    <img src="photos/logo-udesign.png" alt="U-Design" style="height:34px;width:auto;display:block;"
+         onerror="this.style.display='none'; document.getElementById('udesignFallbackText').style.display='inline-flex';">
+    <span id="udesignFallbackText" style="display:none;align-items:center;gap:8px;"><span class="dot"></span> U-Design</span>
+  </a>
   <div style="margin-top:10px;">BalalaHop · a U-Design production tool</div>
   <div style="margin-top:6px;font-size:0.72rem;">Powered by AAKRITI Marketing Agency</div>
 </footer>
@@ -530,8 +563,9 @@ let state = {
   mood:null,
   moodIntensity:60,
   timeHour:18,
+  scriptMode:null,
   styleBible:"Stylized 3D cartoon render — the same warm, soft, Pixar/DreamWorks-adjacent CGI look in every video from the first ever made to the last. RENDER: high-quality stylized 3D animation, soft subsurface scattering on skin and fur, gentle global illumination, soft shadows, shallow depth of field on close-ups — never flat, never 2D, never photorealistic. COLOR THEME: warm terracotta, peach, and dusty-rose base tones throughout every set and character, balanced with cream and warm-white neutrals, sage-green accents, and soft golden-hour lighting; blues and cooler tones appear only as small accents (glass, water, night windows), never dominating a frame. LIGHT: warm, soft, cinematic — golden-hour or cozy interior lighting, gentle highlights, soft rim light, no harsh shadows or cold fluorescent light. DESIGN LANGUAGE: rounded, soft, huggable shapes; oversized expressive eyes with a bright catchlight sparkle; soft plush-toy proportions; detailed, touchable-looking fur/hair/fabric texture; gentle blush on cheeks. MOOD: cozy, wholesome, gentle, a little playful — a warm family/pet slice-of-life feeling, never edgy, dark, or chaotic. This look is the constant across every generation — characters, backgrounds, and story change, but the render style, palette, lighting, and mood described here never do.",
-  udesignUrl:"https://example.com/udesign"
+  udesignUrl:"https://udesign999-bot.github.io/"
 };
 let adminUnlocked = false;
 let currentEditor = { kind:null, idx:null, allowedByViewer:false };
@@ -588,6 +622,7 @@ wireChipRow(document.getElementById('contentTypeRow'),
     document.getElementById('platformBlock').style.display = (state.contentType==='Script') ? 'none' : 'block';
     document.getElementById('adStyleRow').style.display = (state.contentType==='Script') ? 'none' : 'flex';
     updateDurationVisibility();
+    updateScriptDurationVisibility();
   },
   ()=>{
     [...document.getElementById('contentTypeRow').children].forEach(c=>c.classList.remove('active'));
@@ -595,6 +630,7 @@ wireChipRow(document.getElementById('contentTypeRow'),
     document.getElementById('platformBlock').style.display='none';
     document.getElementById('durationBlock').style.display='none';
     document.getElementById('adStyleRow').style.display='none';
+    updateScriptDurationVisibility();
   }
 );
 document.getElementById('adStyleToggle').addEventListener('click', ()=>{
@@ -763,6 +799,57 @@ function updateDurationVisibility(){
   } else { block.style.display='none'; }
 }
 document.getElementById('customDuration').addEventListener('input', e=> state.duration = e.target.value );
+
+/* Script step gets its own length control — Video/Reel already have one in Step 1,
+   but "Script only" mode has no other place to say how long the script should be for. */
+const SCRIPT_DURATIONS = ["10 sec","20 sec","30 sec","1 min","2 min","5 min"];
+function updateScriptDurationVisibility(){
+  const block = document.getElementById('scriptDurationBlock');
+  if(state.contentType !== 'Script'){ block.style.display='none'; return; }
+  block.style.display='block';
+  const row = document.getElementById('scriptDurationRow'); row.innerHTML='';
+  SCRIPT_DURATIONS.forEach(d=>{ const b=document.createElement('button'); b.className='chip'; b.dataset.d=d; b.textContent=d; row.appendChild(b); });
+  const custom=document.createElement('button'); custom.className='chip'; custom.dataset.d='__custom__'; custom.textContent='✏️ Type my own';
+  row.appendChild(custom);
+  wireChipRow(row,
+    (btn)=>{
+      [...row.children].forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      const custField=document.getElementById('scriptCustomDurationField');
+      if(btn.dataset.d==='__custom__'){ custField.style.display='block'; state.duration = document.getElementById('scriptCustomDuration').value || null; }
+      else { custField.style.display='none'; state.duration = btn.dataset.d; }
+    },
+    ()=>{
+      [...row.children].forEach(c=>c.classList.remove('active'));
+      state.duration=null;
+      document.getElementById('scriptCustomDurationField').style.display='none';
+    }
+  );
+}
+document.getElementById('scriptCustomDuration').addEventListener('input', e=> state.duration = e.target.value );
+
+/* "Build script skeleton" — splits the chosen length into 8-second parts locally (no AI call)
+   and lists exactly which character + reference photo belongs in each part, so you know what
+   to write and the ZIP can later gather the right images automatically. */
+document.getElementById('skeletonBtn').addEventListener('click', ()=>{
+  const totalSeconds = durationToSeconds(state.duration);
+  if(!totalSeconds){ toast('Pick a length first — above for Script, or in Step 1 for Video/Reel'); return; }
+  const numParts = totalSeconds <= 10 ? 1 : Math.ceil(totalSeconds/8);
+  const segLen = Math.round(totalSeconds/numParts);
+  const cast = [...state.characters, state.character6].filter(c=>c.selected);
+  const castLine = cast.length
+    ? cast.map(c=>`${c.name} (reference: ${c.photo || 'no photo yet'})`).join(', ')
+    : 'no characters selected yet — pick some in Step 2';
+  const lines = [];
+  for(let i=0;i<numParts;i++){
+    lines.push(`SCRIPT ${i+1} (~${segLen}s) — ${castLine}`);
+    lines.push('[Write what happens in this part]');
+    lines.push('');
+  }
+  document.getElementById('finalScript').value = lines.join('\n').trim();
+  syncFinalScriptDisplay();
+  toast(`Built a ${numParts}-part skeleton — fill in each bracket, then Build my prompt`);
+});
 
 /* ============================================================ STEP 2 — characters */
 /* Single click on a card selects it; double click on a selected card deselects it. */
@@ -978,16 +1065,85 @@ function scanText(){
 }
 
 /* ============================================================ STEP 8 — script + AI */
+function scriptContextSummary(){
+  const chars = selectedCharacterNames();
+  const charLine = chars.length ? chars.join(', ') : 'no characters selected yet';
+  let bgLine;
+  if(state.bgCustomStart || state.bgCustomEnd){
+    bgLine = 'custom start/end backgrounds';
+  } else if(state.bgSequence.length===1){
+    bgLine = state.backgrounds[state.bgSequence[0]].label;
+  } else if(state.bgSequence.length>1){
+    bgLine = state.bgSequence.map(idx=>state.backgrounds[idx].label).join(' → ');
+  } else {
+    bgLine = 'no background selected';
+  }
+  const moodLine = state.mood ? `${state.mood} (${state.moodIntensity}%)` : 'not set';
+  const timeLine = `${formatHour(state.timeHour)} · ${timeInfo(state.timeHour).label}`;
+  const vibeLine = state.vibes.length ? state.vibes.join(', ') : 'none picked';
+  const modeLine = state.scriptMode ? SCRIPT_MODE_LABELS[state.scriptMode] : 'not set';
+  return `Starting from: ${modeLine}\nCharacters: ${charLine}\nBackground: ${bgLine}\nVibe: ${vibeLine}\nMood: ${moodLine}\nTime of day: ${timeLine}`;
+}
 function syncFinalScriptDisplay(){
   const val = document.getElementById('finalScript').value;
   const box = document.getElementById('finalScriptBox');
   const disp = document.getElementById('finalScriptDisplay');
-  if(val.trim()){ box.classList.remove('empty'); disp.textContent = val; }
-  else { box.classList.add('empty'); disp.textContent = 'Nothing written yet — draft it above.'; }
+  if(val.trim()){
+    box.classList.remove('empty');
+    disp.textContent = `${scriptContextSummary()}\n\n— — —\n\n${val}`;
+  } else {
+    box.classList.add('empty');
+    disp.textContent = 'Nothing written yet — draft it above.';
+  }
 }
 document.getElementById('finalScript').addEventListener('input', syncFinalScriptDisplay);
 ['copy','cut','contextmenu','selectstart'].forEach(evt=>{
   document.getElementById('finalScriptBox').addEventListener(evt, e=> e.preventDefault());
+});
+
+const SCRIPT_MODE_LABELS = { amaze:'Amaze me (surprise idea)', topic:'Just a topic', brief:'Brief outline', full:'Full script' };
+const SCRIPT_MODE_PLACEHOLDERS = {
+  amaze: 'Click "Amaze me" above to fill this in.',
+  topic: 'Just a couple of words is fine, e.g. "hide and seek in the kitchen" — Flow will develop it into a full scene.',
+  brief: 'A short outline of what happens, no need for exact lines — Flow will turn it into a full scene.',
+  full: 'Write every beat and line yourself — this goes in exactly as written.'
+};
+wireChipRow(document.getElementById('scriptModeRow'),
+  (btn)=>{
+    [...document.getElementById('scriptModeRow').children].forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    state.scriptMode = btn.dataset.mode;
+    document.getElementById('finalScript').placeholder = SCRIPT_MODE_PLACEHOLDERS[state.scriptMode];
+    syncFinalScriptDisplay();
+    if(state.scriptMode === 'amaze'){ runScriptAmazeMe(); }
+  },
+  ()=>{
+    [...document.getElementById('scriptModeRow').children].forEach(c=>c.classList.remove('active'));
+    state.scriptMode = null;
+    document.getElementById('finalScript').placeholder = 'Write your topic, brief, or full script here — or use Amaze me above.';
+    syncFinalScriptDisplay();
+  }
+);
+/* Local "Amaze me" scoped to just the script — reuses the same curated topic bank as Step 1,
+   but only touches the draft, using whichever characters/background are already selected. */
+function runScriptAmazeMe(){
+  const cast = pickAmazeCast();
+  const availableBg = state.backgrounds.map((b,i)=>({b,i})).filter(x=>x.b.photo);
+  const bgLabel = availableBg.length ? pickRandom(availableBg).b.label : 'a cozy spot';
+  const pickTopic = pickRandom(AMAZE_TOPICS);
+  const nameA = cast[0] ? cast[0].name : 'K';
+  const nameB = cast[1] ? cast[1].name : (cast[0] ? cast[0].name : 'Pogo');
+  const scriptLines = pickTopic.beats.map((line,i)=>`${i+1}. ${line.replace(/\{A\}/g, nameA).replace(/\{B\}/g, nameB).replace(/\{PLACE\}/g, bgLabel)}`);
+  document.getElementById('finalScript').value = `${pickTopic.topic}\n\n${scriptLines.join('\n')}`;
+  syncFinalScriptDisplay();
+  toast(`✨ ${pickTopic.topic}`);
+}
+document.getElementById('continueOldBtn').addEventListener('click', ()=>{
+  const old = document.getElementById('oldScript').value.trim();
+  if(!old){ toast('Paste your old script above first'); return; }
+  document.getElementById('finalScript').value = `${old}\n\n[Continue the story from here — same characters and setting]\n`;
+  syncFinalScriptDisplay();
+  document.getElementById('finalScript').focus();
 });
 
 function selectedCharacterNames(){
@@ -1072,6 +1228,13 @@ document.getElementById('compileBtn').addEventListener('click', ()=>{
     headerLinesBase.push(`PLATFORM: ${state.platform} (${state.format||'—'}), aspect ratio ${state.aspect||'—'}`);
   }
 
+  const scriptModeNote = {
+    topic: ' (this is just a topic — develop it into a full scene with proper beats and pacing)',
+    brief: ' (this is a brief outline — turn it into a full scene, filling in the specific action and beats)',
+    full: ' (this is the full script — use it exactly as written, beat for beat)',
+    amaze: ''
+  }[state.scriptMode] || '';
+
   const bodyBlock = (scriptSegment) => `STYLE BIBLE (apply exactly, every shot):
 ${state.styleBible}
 
@@ -1084,7 +1247,7 @@ ${bgBlock}
 DIALOGUE / QUOTES:
 ${dialogueBlock}
 
-SCRIPT:
+SCRIPT${scriptModeNote}:
 ${scriptSegment || '(no script text — improvise from the style bible and characters above)'}${adStyleBlock}
 
 PRODUCTION REQUIREMENTS:
@@ -1094,7 +1257,7 @@ PRODUCTION REQUIREMENTS:
 - Strictly G-rated, made for kids: no profanity, slurs, sexual content, drug/alcohol references, or rude gestures of any kind.
 - Deliver in ${state.aspect||'the selected'} aspect ratio.${state.promoteTag ? '\n\nPROMOTION:\n- Feature the attached ID tag(s) prominently and legibly in at least one clean close-up shot — this promotes Coco Pet Care by U-Design.' : ''}`;
 
-  const totalSeconds = (state.contentType==='Reel' || state.contentType==='Video') ? durationToSeconds(state.duration) : 0;
+  const totalSeconds = (state.contentType==='Reel' || state.contentType==='Video' || state.contentType==='Script') ? durationToSeconds(state.duration) : 0;
 
   // Anything 10s or under stays a single prompt. Longer video/reel gets split into ~8s chunks —
   // each one a fully self-contained prompt with the same style/characters/background repeated,
@@ -1118,7 +1281,7 @@ PRODUCTION REQUIREMENTS:
   } else {
     lastScriptParts = null;
     const header = [`TITLE: BalalaHop generation — ${new Date().toLocaleString()}`, ...headerLinesBase];
-    if((state.contentType==='Reel' || state.contentType==='Video') && state.duration){
+    if((state.contentType==='Reel' || state.contentType==='Video' || state.contentType==='Script') && state.duration){
       header.push(`LENGTH: ${state.duration}`);
     }
     lastPlainPrompt = `${header.join('\n')}\n\n${bodyBlock(scriptText)}`;
@@ -1166,14 +1329,77 @@ document.getElementById('zipBtn').addEventListener('click', async ()=>{
   if(typeof JSZip === 'undefined'){ toast('ZIP tool failed to load — check your connection'); return; }
   try{
     const zip = new JSZip();
+    let anySkipped = false;
+
+    async function fetchWithExtFallback(src){
+      const candidates = [src, ...PHOTO_EXT_FALLBACKS.map(ext => src.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '') + ext)];
+      for(const url of candidates){
+        try{ const res = await fetch(url); if(res.ok) return res; }catch(e){ /* try next */ }
+      }
+      return null;
+    }
+    async function addPhotoToFolder(folder, src, filename){
+      if(!src) return;
+      try{
+        if(src.startsWith('data:')){
+          folder.file(filename, src.split(',')[1], {base64:true});
+        } else {
+          const res = await fetchWithExtFallback(src);
+          if(!res) throw new Error('fetch failed');
+          const blob = await res.blob();
+          folder.file(filename, blob);
+        }
+      }catch(e){ anySkipped = true; }
+    }
+    function textMentionsName(text, name){
+      if(!name) return false;
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(text || '');
+    }
+
+    // Everyone selected, and every background actually in use — the full roster to draw from.
+    const castRoster = [...state.characters, state.character6].filter(c=>c.selected);
+    const usedBgIndexes = [...new Set(state.bgSequence)];
+    const bgRoster = usedBgIndexes.map(i=>state.backgrounds[i]).filter(Boolean);
+
     if(lastScriptParts){
-      // Split into script-1.txt, script-2.txt, etc. — each one is already fully self-contained,
-      // so it's a straight copy-paste per clip, in order.
-      lastScriptParts.forEach(p=> zip.file(p.label, p.text));
+      // One folder per 8-second part — each with its own prompt.txt and a reference/ folder
+      // containing ONLY the characters whose names actually appear in that part's text (so you
+      // don't have to work out by hand which photo goes with which clip). Backgrounds are
+      // included in every part since the setting is usually constant across the whole video.
+      for(let i=0; i<lastScriptParts.length; i++){
+        const part = lastScriptParts[i];
+        const folder = zip.folder(`script-${i+1}`);
+        folder.file('prompt.txt', part.text);
+        const refFolder = folder.folder('reference');
+        let mentioned = castRoster.filter(c=>textMentionsName(part.text, c.name));
+        if(!mentioned.length) mentioned = castRoster; // nothing matched — safest to include everyone rather than nothing
+        for(const c of mentioned){
+          await addPhotoToFolder(refFolder, c.photo, `${c.name.replace(/[^a-z0-9]+/gi,'_')}.jpg`);
+          if(c.useTag) await addPhotoToFolder(refFolder, c.tagPhoto, `${c.name.replace(/[^a-z0-9]+/gi,'_')}_tag.jpg`);
+        }
+        for(const bg of bgRoster){
+          await addPhotoToFolder(refFolder, bg.photo, `background_${bg.label}.jpg`);
+        }
+        if(state.bgCustomStart) await addPhotoToFolder(refFolder, state.bgCustomStart, 'background_custom_start.jpg');
+        if(state.bgCustomEnd) await addPhotoToFolder(refFolder, state.bgCustomEnd, 'background_custom_end.jpg');
+      }
       zip.file('all-scripts-combined.txt', lastPlainPrompt);
     } else {
+      // Short enough to stay one piece — flat layout as before.
       zip.file('prompt.txt', lastPlainPrompt);
+      const imagesFolder = zip.folder('reference-photos');
+      for(const c of castRoster){
+        await addPhotoToFolder(imagesFolder, c.photo, `${c.name.replace(/[^a-z0-9]+/gi,'_')}.jpg`);
+        if(c.useTag) await addPhotoToFolder(imagesFolder, c.tagPhoto, `${c.name.replace(/[^a-z0-9]+/gi,'_')}_tag.jpg`);
+      }
+      for(const bg of bgRoster){
+        await addPhotoToFolder(imagesFolder, bg.photo, `background_${bg.label}.jpg`);
+      }
+      await addPhotoToFolder(imagesFolder, state.bgCustomStart, 'background_custom_start.jpg');
+      await addPhotoToFolder(imagesFolder, state.bgCustomEnd, 'background_custom_end.jpg');
     }
+
     const selections = {
       generatedAt: new Date().toISOString(), scriptParts: lastScriptParts ? lastScriptParts.length : 1, contentType: state.contentType, platform: state.platform, format: state.format,
       aspectRatio: state.aspect, duration: state.duration, styleBible: state.styleBible,
@@ -1188,50 +1414,8 @@ document.getElementById('zipBtn').addEventListener('click', async ()=>{
       dialogueLines: state.lines.map(l=>({character: findCharByKey(l.charKey).name, emotion: l.emotion, text: l.text}))
     };
     zip.file('selections.json', JSON.stringify(selections, null, 2));
-    const imagesFolder = zip.folder('reference-photos');
-    let anySkipped = false;
-    // Photos are either a data: URL (fresh upload this session) or a "photos/x.jpg" file path
-    // (the normal case now). File paths only work when this page is actually hosted — fetch()
-    // can't read local files opened as file://, so we skip gracefully rather than fail the whole ZIP.
-    async function fetchWithExtFallback(src){
-      const candidates = [src, ...PHOTO_EXT_FALLBACKS.map(ext => src.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '') + ext)];
-      for(const url of candidates){
-        try{ const res = await fetch(url); if(res.ok) return res; }catch(e){ /* try next */ }
-      }
-      return null;
-    }
-    async function addPhotoToZip(src, filename){
-      if(!src) return;
-      try{
-        if(src.startsWith('data:')){
-          imagesFolder.file(filename, src.split(',')[1], {base64:true});
-        } else {
-          const res = await fetchWithExtFallback(src);
-          if(!res) throw new Error('fetch failed');
-          const blob = await res.blob();
-          imagesFolder.file(filename, blob);
-        }
-      }catch(e){ anySkipped = true; }
-    }
-    // Only the SELECTED characters, and only their tag if the Tag toggle is on — not every character in the roster.
-    for(const c of state.characters){
-      if(!c.selected) continue;
-      await addPhotoToZip(c.photo, `${c.name.replace(/[^a-z0-9]+/gi,'_')}.jpg`);
-      if(c.useTag) await addPhotoToZip(c.tagPhoto, `${c.name.replace(/[^a-z0-9]+/gi,'_')}_tag.jpg`);
-    }
-    if(state.character6.selected){
-      await addPhotoToZip(state.character6.photo, `${state.character6.name.replace(/[^a-z0-9]+/gi,'_')}.jpg`);
-      if(state.character6.useTag) await addPhotoToZip(state.character6.tagPhoto, `${state.character6.name.replace(/[^a-z0-9]+/gi,'_')}_tag.jpg`);
-    }
-    // Only the backgrounds actually used in the shot order — not every background that happens to have a photo.
-    const usedBgIndexes = [...new Set(state.bgSequence)];
-    for(const i of usedBgIndexes){
-      const bg = state.backgrounds[i];
-      if(bg) await addPhotoToZip(bg.photo, `background_${bg.label}.jpg`);
-    }
-    await addPhotoToZip(state.bgCustomStart, 'background_custom_start.jpg');
-    await addPhotoToZip(state.bgCustomEnd, 'background_custom_end.jpg');
-    if(anySkipped) zip.file('reference-photos/NOTE.txt', 'Some photos could not be bundled because this page is running from a local file rather than a real host. Once this page is hosted (e.g. GitHub Pages) with its photos/ folder next to it, ZIP downloads will include every photo.');
+
+    if(anySkipped) zip.file('NOTE.txt', 'Some photos could not be bundled because this page is running from a local file rather than a real host. Once this page is hosted (e.g. GitHub Pages) with its photos/ folder next to it, ZIP downloads will include every photo.');
     const blob = await zip.generateAsync({type:'blob'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `balalhop-${Date.now()}.zip`;
