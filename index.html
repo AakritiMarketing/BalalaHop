@@ -15,6 +15,25 @@
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
+  body.light-theme{
+    --bg:#FBF6EE; --bg-soft:#F3EADA; --card:#FFFDF8; --card-2:#F1E7D4; --line:#E2D5BC;
+    --text:#2B2318; --muted:#7A6E58;
+    --amber:#D9861F; --amber-deep:#B96E11; --teal:#1B8F76; --pink:#C43D67;
+  }
+  body.light-theme{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(217,134,31,0.08), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(27,143,118,0.06), transparent 55%),
+      var(--bg);
+  }
+  [dir="rtl"] .step-sub, [dir="rtl"] .chip-row, [dir="rtl"] .field, [dir="rtl"] .helper{ margin-left:0; margin-right:42px; }
+  [dir="rtl"] .step-head{ flex-direction:row-reverse; }
+  [dir="rtl"] .line-block, [dir="rtl"] .char-card-top{ direction:rtl; }
+  .top-bar{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px 0; max-width:920px; margin:0 auto; }
+  .top-bar-group{ display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .pill-toggle{ background:transparent; border:none; color:var(--muted); padding:7px 14px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; }
+  .pill-toggle.active{ background:var(--amber); color:#231506; }
+
   body{margin:0;background:radial-gradient(1200px 600px at 10% -10%, rgba(242,169,59,0.10), transparent 60%),radial-gradient(1000px 500px at 100% 0%, rgba(79,209,174,0.08), transparent 55%),var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.5;padding-bottom:80px;}
   h1,h2,h3,.display{font-family:'Fredoka',sans-serif;}
   ::selection{background:var(--amber);color:#1B1420;}
@@ -157,11 +176,22 @@
 </head>
 <body>
 
+<div class="top-bar">
+  <div class="top-bar-group">
+    <button class="pill-toggle active" id="langEn" data-lang="en">EN</button>
+    <button class="pill-toggle" id="langAr" data-lang="ar">عربي</button>
+  </div>
+  <div class="top-bar-group">
+    <button class="pill-toggle active" id="themeDark" data-theme="dark">🌙</button>
+    <button class="pill-toggle" id="themeLight" data-theme="light">☀️</button>
+  </div>
+</div>
+
 <header>
   <div class="brand-click" id="brandClick">
     <h1>Balala<span style="color:var(--teal);-webkit-text-fill-color:var(--teal);">Hop</span></h1>
   </div>
-  <div class="tagline">Build one clean, locked prompt for your next script, reel, video or photo.</div>
+  <div class="tagline" data-i18n="tagline">Build one clean, locked prompt for your next script, reel, video or photo.</div>
   <div class="sprocket-rule"></div>
 </header>
 
@@ -169,19 +199,19 @@
 
   <!-- STEP 1: content type + platform + length + amaze me, all together -->
   <section class="step">
-    <div class="step-head"><span class="step-num">1</span><h2>What are we making?</h2></div>
+    <div class="step-head"><span class="step-num">1</span><h2 data-i18n="step1Title">What are we making?</h2></div>
     <div class="chip-row" id="contentTypeRow">
-      <button class="chip" data-type="Video">🎬 Video</button>
-      <button class="chip" data-type="Reel">📱 Reel</button>
-      <button class="chip" data-type="Script">📝 Script only</button>
-      <button class="chip" data-type="Photo">🖼️ Photo</button>
+      <button class="chip" data-type="Video" data-i18n="typeVideo">🎬 Video</button>
+      <button class="chip" data-type="Reel" data-i18n="typeReel">📱 Reel</button>
+      <button class="chip" data-type="Script" data-i18n="typeScript">📝 Script only</button>
+      <button class="chip" data-type="Photo" data-i18n="typePhoto">🖼️ Photo</button>
     </div>
     <div class="chip-row" id="adStyleRow" style="display:none;margin-top:12px;">
-      <button class="chip" id="adStyleToggle">🎯 Make this an ad</button>
+      <button class="chip" id="adStyleToggle" data-i18n="adStyleBtn">🎯 Make this an ad</button>
     </div>
 
     <div id="platformBlock" style="display:none;margin-top:22px;">
-      <div class="step-sub" style="margin-left:0;">Platform</div>
+      <div class="step-sub" style="margin-left:0;" data-i18n="platformLabel">Platform</div>
       <div class="chip-row" id="platformRow" style="margin-left:0;">
         <button class="chip teal" data-platform="YouTube">YouTube</button>
         <button class="chip teal" data-platform="Instagram">Instagram</button>
@@ -194,7 +224,7 @@
     </div>
 
     <div id="durationBlock" style="display:none;margin-top:22px;">
-      <div class="step-sub" style="margin-left:0;">Length</div>
+      <div class="step-sub" style="margin-left:0;" data-i18n="lengthLabel">Length</div>
       <div class="chip-row" id="durationRow" style="margin-left:0;"></div>
       <div class="field" id="customDurationField" style="display:none;margin-left:0;">
         <label>Custom length (e.g. "45 sec" or "3 min 30 sec")</label>
@@ -203,21 +233,21 @@
     </div>
 
     <div style="text-align:center;margin-top:26px;">
-      <button class="btn btn-primary" id="amazeMeBar" style="padding:15px 34px;font-size:1.05rem;width:100%;max-width:420px;">🎲 Amaze me — surprise me with everything</button>
+      <button class="btn btn-primary" id="amazeMeBar" style="padding:15px 34px;font-size:1.05rem;width:100%;max-width:420px;"><span data-i18n="amazeBarBtn">🎲 Amaze me — surprise me with everything</span></button>
     </div>
     <div id="amazeBrief" style="display:none;margin-top:14px;margin-left:0;padding:14px;border-radius:12px;background:var(--bg-soft);border:1px solid var(--line);font-size:0.85rem;color:var(--muted);"></div>
   </section>
 
   <!-- STEP 2: characters -->
   <section class="step">
-    <div class="step-head"><span class="step-num">2</span><h2>Characters</h2></div>
-    <div class="step-sub">Characters 1–4 are fixed. Character 6 is yours to add for a one-off guest.</div>
+    <div class="step-head"><span class="step-num">2</span><h2 data-i18n="step2Title">Characters</h2></div>
+    <div class="step-sub" data-i18n="step2Sub">Characters 1–4 are fixed. Character 6 is yours to add for a one-off guest.</div>
     <div class="media-grid" id="charGrid"></div>
   </section>
 
   <!-- STEP 3: backgrounds -->
   <section class="step">
-    <div class="step-head"><span class="step-num">3</span><h2>Backgrounds</h2></div>
+    <div class="step-head"><span class="step-num">3</span><h2 data-i18n="step3Title">Backgrounds</h2></div>
     <div class="step-sub">Tap a location to add it to your shot order — tap the same one again to reuse it. First tap = starting background, last tap = ending background. Pick just one to use it for the whole video.</div>
     <div class="media-grid" id="bgGrid"></div>
     <div class="seq-wrap" id="seqWrap"></div>
@@ -238,21 +268,21 @@
 
   <!-- STEP 6: lines -->
   <section class="step">
-    <div class="step-head"><span class="step-num">4</span><h2>Lines &amp; quotes</h2></div>
-    <div class="step-sub">Anything a character should say — pick who says it and how they feel. Add as many as you like.</div>
+    <div class="step-head"><span class="step-num">4</span><h2 data-i18n="step4Title">Lines &amp; quotes</h2></div>
+    <div class="step-sub" data-i18n="step4Sub">Anything a character should say — pick who says it and how they feel. Add as many as you like.</div>
     <div id="lineList"></div>
-    <div class="field"><button class="btn btn-ghost btn-sm" id="addLineBtn">+ Add another line</button></div>
+    <div class="field"><button class="btn btn-ghost btn-sm" id="addLineBtn" data-i18n="addLineBtn">+ Add another line</button></div>
   </section>
 
   <!-- STEP 7: vibe, mood, timing -->
   <section class="step">
-    <div class="step-head"><span class="step-num">5</span><h2>Vibe, Mood &amp; Timing</h2></div>
+    <div class="step-head"><span class="step-num">5</span><h2 data-i18n="step5Title">Vibe, Mood &amp; Timing</h2></div>
     <div class="step-sub">Dial these in precisely — small changes here change the whole feel of the result, like ingredients in a recipe.</div>
 
-    <div class="field"><label>Genre / vibe — pick as many as fit</label></div>
+    <div class="field"><label data-i18n="vibeLabel">Genre / vibe — pick as many as fit</label></div>
     <div class="chip-row" id="vibeRow"></div>
 
-    <div class="field" style="margin-top:20px;"><label>Mood — pick one</label></div>
+    <div class="field" style="margin-top:20px;"><label data-i18n="moodLabel">Mood — pick one</label></div>
     <div class="chip-row" id="moodRow"></div>
     <div class="field">
       <label>Mood intensity — <span id="moodIntensityLabel">pick a mood first</span></label>
@@ -267,7 +297,7 @@
 
   <!-- STEP 8: script (last) -->
   <section class="step">
-    <div class="step-head"><span class="step-num">6</span><h2>Script</h2></div>
+    <div class="step-head"><span class="step-num">6</span><h2 data-i18n="step6Title">Script</h2></div>
     <div class="step-sub">Pick how you want to start, write it, then check the final script below before building the skeleton or the prompt.</div>
 
     <div id="scriptDurationBlock" style="display:none;margin-bottom:18px;">
@@ -279,26 +309,26 @@
       </div>
     </div>
 
-    <div class="field" style="margin-top:0;"><label>How do you want to start?</label></div>
+    <div class="field" style="margin-top:0;"><label data-i18n="startLabel">How do you want to start?</label></div>
     <div class="chip-row" id="scriptModeRow">
-      <button class="chip" data-mode="amaze">🎲 Amaze me</button>
-      <button class="chip" data-mode="topic">💡 Just a topic</button>
-      <button class="chip" data-mode="brief">📋 Brief outline</button>
-      <button class="chip" data-mode="full">🎬 Full script</button>
+      <button class="chip" data-mode="amaze" data-i18n="modeAmaze">🎲 Amaze me</button>
+      <button class="chip" data-mode="topic" data-i18n="modeTopic">💡 Just a topic</button>
+      <button class="chip" data-mode="brief" data-i18n="modeBrief">📋 Brief outline</button>
+      <button class="chip" data-mode="full" data-i18n="modeFull">🎬 Full script</button>
     </div>
     <div class="helper" id="scriptModeHelper" style="margin-left:0;margin-top:8px;">Pick "Just a topic" or "Brief outline" and Flow will develop it into a full scene; pick "Full script" if you're writing every line yourself.</div>
 
     <div class="field">
-      <label>Your old script (optional)</label>
+      <label data-i18n="oldScriptLabel">Your old script (optional)</label>
       <textarea id="oldScript" placeholder="Paste the script from your last reel or video here."></textarea>
     </div>
     <div class="ai-row" style="margin-left:42px;">
-      <button class="btn btn-ghost btn-sm" id="continueOldBtn">➡️ Continue from this</button>
+      <button class="btn btn-ghost btn-sm" id="continueOldBtn" data-i18n="continueOldBtn">➡️ Continue from this</button>
       <span class="ai-status" style="font-size:0.78rem;color:var(--muted);">carries it into the draft below so you can pick up the story from there</span>
     </div>
 
     <div class="field">
-      <label>Draft</label>
+      <label data-i18n="draftLabel">Draft</label>
       <textarea id="finalScript" placeholder="Write your topic, brief, or full script here — or use Amaze me above." style="min-height:120px;"></textarea>
     </div>
 
@@ -308,20 +338,29 @@
     </div>
 
     <div class="ai-row" style="margin-left:42px;margin-top:16px;">
-      <button class="btn btn-ghost btn-sm" id="skeletonBtn">🧩 Build script skeleton</button>
+      <button class="btn btn-ghost btn-sm" id="skeletonBtn" data-i18n="skeletonBtn">🧩 Build script skeleton</button>
       <span class="ai-status" style="font-size:0.78rem;color:var(--muted);">splits your length into 8-second parts and lists which character (and reference photo) goes in each one</span>
     </div>
   </section>
+
+  <div class="step" style="margin-top:22px;">
+    <div class="step-head"><span class="step-num">📚</span><h2>Skills</h2></div>
+    <div class="step-sub">Reference sheets you can keep or hand to your friend — not tied to any one generation.</div>
+    <div class="chip-row" style="flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" id="downloadCartoonSkillBtn">🎬 Download cartoon video skill</button>
+      <button class="btn btn-ghost btn-sm" id="downloadScriptSkillBtn">✍️ Download script &amp; drama skill</button>
+    </div>
+  </div>
 
   <div class="helper" style="text-align:center;margin-left:0;margin-top:24px;">This tool is made for kids — every script and line is filtered under kid-safety prevention rules before a prompt is built.</div>
   <div class="safety-flag" id="safetyFlag" style="margin-left:0;max-width:600px;margin:10px auto 0;">⚠️ Something you typed may not be kid-safe. Please rephrase it before compiling — flagged: <span id="flagWords"></span></div>
 
   <div style="text-align:center;margin-top:24px;">
-    <button class="chip" id="promoToggle" style="padding:9px 18px;">📣 Promote Coco Pet Care by U-Design</button>
+    <button class="chip" id="promoToggle" style="padding:9px 18px;" data-i18n="promoBtn">📣 Promote Coco Pet Care by U-Design</button>
   </div>
 
   <div style="text-align:center;margin-top:16px;">
-    <button class="btn btn-primary" id="compileBtn" style="padding:15px 34px;font-size:1.05rem;">🎬 Build my prompt</button>
+    <button class="btn btn-primary" id="compileBtn" style="padding:15px 34px;font-size:1.05rem;" data-i18n="buildBtn">🎬 Build my prompt</button>
   </div>
 
   <div class="reel-card" id="reelCard" style="display:none;">
@@ -330,8 +369,9 @@
       <h3>Your prompt</h3>
       <pre class="prompt-out" id="promptOut"></pre>
       <div class="reel-actions">
-        <button class="btn btn-primary btn-sm" id="copyBtn">📋 Copy</button>
-        <button class="btn btn-ghost btn-sm" id="zipBtn">📦 Download ZIP (prompt + photos)</button>
+        <button class="btn btn-primary btn-sm" id="copyBtn" data-i18n="copyBtn">📋 Copy</button>
+        <button class="btn btn-ghost btn-sm" id="zipBtn" data-i18n="zipBtn">📦 Download ZIP (prompt + photos)</button>
+        <button class="btn btn-ghost btn-sm" id="saveImagesBtn">📱 Save images (iPhone-friendly)</button>
       </div>
     </div>
   </div>
@@ -406,6 +446,67 @@
 
 <script>
 /* ============================================================ STATE */
+/* ============================================================ LANGUAGE (UI chrome only)
+   This switches the on-screen labels between English and Arabic. It does NOT translate the
+   compiled prompt itself — that stays in English on purpose, since Flow reads English prompts
+   most reliably regardless of which language you're browsing the page in. */
+const I18N = {
+  en: {
+    tagline: "Build one clean, locked prompt for your next script, reel, video or photo.",
+    step1Title: "What are we making?", typeVideo: "🎬 Video", typeReel: "📱 Reel", typeScript: "📝 Script only", typePhoto: "🖼️ Photo",
+    adStyleBtn: "🎯 Make this an ad", platformLabel: "Platform", lengthLabel: "Length",
+    amazeBarBtn: "🎲 Amaze me — surprise me with everything",
+    step2Title: "Characters", step2Sub: "Characters 1–4 are fixed. Character 6 is yours to add for a one-off guest.",
+    step3Title: "Backgrounds",
+    step4Title: "Lines & quotes", step4Sub: "Anything a character should say — pick who says it and how they feel. Add as many as you like.", addLineBtn: "+ Add another line",
+    step5Title: "Vibe, Mood & Timing", vibeLabel: "Genre / vibe — pick as many as fit", moodLabel: "Mood — pick one",
+    step6Title: "Script", startLabel: "How do you want to start?",
+    modeAmaze: "🎲 Amaze me", modeTopic: "💡 Just a topic", modeBrief: "📋 Brief outline", modeFull: "🎬 Full script",
+    oldScriptLabel: "Your old script (optional)", continueOldBtn: "➡️ Continue from this", draftLabel: "Draft", skeletonBtn: "🧩 Build script skeleton",
+    promoBtn: "📣 Promote Coco Pet Care by U-Design", buildBtn: "🎬 Build my prompt",
+    copyBtn: "📋 Copy", zipBtn: "📦 Download ZIP (prompt + photos)"
+  },
+  ar: {
+    tagline: "جهّز موجّهاً واحداً واضحاً ومحكماً لمقطع الفيديو أو الريلز أو الصورة القادمة.",
+    step1Title: "ما الذي سننشئه؟", typeVideo: "🎬 فيديو", typeReel: "📱 ريلز", typeScript: "📝 نص فقط", typePhoto: "🖼️ صورة",
+    adStyleBtn: "🎯 اجعله إعلاناً", platformLabel: "المنصة", lengthLabel: "المدة",
+    amazeBarBtn: "🎲 فاجئني — اختر كل شيء تلقائياً",
+    step2Title: "الشخصيات", step2Sub: "الشخصيات ١ إلى ٤ ثابتة. الشخصية ٦ من اختيارك لضيف خاص.",
+    step3Title: "الخلفيات",
+    step4Title: "الحوار والاقتباسات", step4Sub: "أي شيء تقوله شخصية — اختر من يقوله وكيف يشعر. أضف ما تشاء.", addLineBtn: "+ أضف سطراً آخر",
+    step5Title: "الأجواء والمزاج والتوقيت", vibeLabel: "النوع / الأجواء — اختر ما يناسب", moodLabel: "المزاج — اختر واحداً",
+    step6Title: "النص", startLabel: "كيف تريد أن تبدأ؟",
+    modeAmaze: "🎲 فاجئني", modeTopic: "💡 مجرد فكرة", modeBrief: "📋 ملخص مختصر", modeFull: "🎬 نص كامل",
+    oldScriptLabel: "نصك القديم (اختياري)", continueOldBtn: "➡️ أكمل من هنا", draftLabel: "المسودة", skeletonBtn: "🧩 إنشاء هيكل النص",
+    promoBtn: "📣 روّج لـ Coco Pet Care عبر U-Design", buildBtn: "🎬 إنشاء الموجّه",
+    copyBtn: "📋 نسخ", zipBtn: "📦 تحميل ZIP (الموجّه + الصور)"
+  }
+};
+function applyLanguage(lang){
+  const dict = I18N[lang] || I18N.en;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    if(dict[key]) el.textContent = dict[key];
+  });
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang==='ar' ? 'rtl' : 'ltr');
+  document.getElementById('langEn').classList.toggle('active', lang==='en');
+  document.getElementById('langAr').classList.toggle('active', lang==='ar');
+}
+document.getElementById('langEn').addEventListener('click', ()=>applyLanguage('en'));
+document.getElementById('langAr').addEventListener('click', ()=>applyLanguage('ar'));
+
+document.getElementById('themeDark').addEventListener('click', ()=>{
+  document.body.classList.remove('light-theme');
+  document.getElementById('themeDark').classList.add('active');
+  document.getElementById('themeLight').classList.remove('active');
+});
+document.getElementById('themeLight').addEventListener('click', ()=>{
+  document.body.classList.add('light-theme');
+  document.getElementById('themeLight').classList.add('active');
+  document.getElementById('themeDark').classList.remove('active');
+});
+
 const RATIOS = {
   Video: {
     YouTube: { Standard:{ratio:"16:9",label:"YouTube video · landscape",w:100,h:56} },
@@ -1251,9 +1352,12 @@ SCRIPT${scriptModeNote}:
 ${scriptSegment || '(no script text — improvise from the style bible and characters above)'}${adStyleBlock}
 
 PRODUCTION REQUIREMENTS:
-- Lock every attached reference image to the character or background it belongs to across all shots.
+- Lock every attached reference image to the character or background it belongs to across all shots — same proportions, colors, and design every time.
 - Use "jump to new setting" and "extend the clip" rather than regenerating from scratch, to preserve continuity.
-- Smooth camera movement and framing; no jump cuts in identity, wardrobe, or color.
+- Camera: prefer slow, deliberate moves (gentle push-ins, soft pans) over whip pans or jump cuts; hold key emotional beats for a full second before cutting.
+- Animation: motion should read as weighted and natural, smooth acceleration/deceleration, no clipping through objects; idle moments still carry subtle motion, never frozen.
+- Follow the dialogue lines exactly as written, spoken by the correct character with the specified emotion — don't invent new lines.
+- Match the background reference exactly — same layout, colors, and key objects — and keep it consistent within a scene.
 - Strictly G-rated, made for kids: no profanity, slurs, sexual content, drug/alcohol references, or rude gestures of any kind.
 - Deliver in ${state.aspect||'the selected'} aspect ratio.${state.promoteTag ? '\n\nPROMOTION:\n- Feature the attached ID tag(s) prominently and legibly in at least one clean close-up shot — this promotes Coco Pet Care by U-Design.' : ''}`;
 
@@ -1324,6 +1428,63 @@ document.getElementById('promptOut').addEventListener('click', function(){
   const range = document.createRange(); range.selectNodeContents(this);
   const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
 });
+async function fetchWithExtFallback(src){
+  const candidates = [src, ...PHOTO_EXT_FALLBACKS.map(ext => src.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '') + ext)];
+  for(const url of candidates){
+    try{ const res = await fetch(url); if(res.ok) return res; }catch(e){ /* try next */ }
+  }
+  return null;
+}
+/* The same "who's actually in this generation" list the ZIP uses — characters selected (+ tag
+   if on), and backgrounds actually in the shot order (+ any custom start/end uploads). */
+async function collectGenerationPhotos(){
+  const items = [];
+  const castRoster = [...state.characters, state.character6].filter(c=>c.selected);
+  const usedBgIndexes = [...new Set(state.bgSequence)];
+  const bgRoster = usedBgIndexes.map(i=>state.backgrounds[i]).filter(Boolean);
+  for(const c of castRoster){
+    if(c.photo) items.push({ src:c.photo, filename:`${c.name.replace(/[^a-z0-9]+/gi,'_')}.jpg` });
+    if(c.useTag && c.tagPhoto) items.push({ src:c.tagPhoto, filename:`${c.name.replace(/[^a-z0-9]+/gi,'_')}_tag.jpg` });
+  }
+  for(const bg of bgRoster){
+    if(bg.photo) items.push({ src:bg.photo, filename:`background_${bg.label}.jpg` });
+  }
+  if(state.bgCustomStart) items.push({ src:state.bgCustomStart, filename:'background_custom_start.jpg' });
+  if(state.bgCustomEnd) items.push({ src:state.bgCustomEnd, filename:'background_custom_end.jpg' });
+  return items;
+}
+async function photoToFile(item){
+  if(item.src.startsWith('data:')){
+    const res = await fetch(item.src);
+    const blob = await res.blob();
+    return new File([blob], item.filename, {type: blob.type || 'image/jpeg'});
+  }
+  const res = await fetchWithExtFallback(item.src);
+  if(!res) return null;
+  const blob = await res.blob();
+  return new File([blob], item.filename, {type: blob.type || 'image/jpeg'});
+}
+/* iPhone/Safari struggles with ZIP downloads (no real "unzip" step in Photos), so this hands
+   the images to the native Share Sheet instead — "Save Images" / "Save to Photos" works there
+   directly. Falls back to opening each photo in its own tab (long-press → Save to Photos) if
+   the browser can't share files at all. */
+document.getElementById('saveImagesBtn').addEventListener('click', async ()=>{
+  if(!lastPlainPrompt){ toast('Build a prompt first'); return; }
+  const items = await collectGenerationPhotos();
+  if(!items.length){ toast('No reference photos in this generation yet'); return; }
+  toast('Preparing images…');
+  const files = (await Promise.all(items.map(photoToFile))).filter(Boolean);
+  if(!files.length){ toast('Could not load the photos — try the ZIP option instead'); return; }
+  if(navigator.canShare && navigator.canShare({files})){
+    try{ await navigator.share({files, title:'BalalaHop reference photos'}); return; }
+    catch(e){ /* user cancelled or share failed — fall through to tab fallback */ }
+  }
+  files.forEach((f,i)=>{
+    setTimeout(()=>{ window.open(URL.createObjectURL(f), '_blank'); }, i*300);
+  });
+  toast('Opened each photo in a new tab — long-press each one and choose "Save to Photos"');
+});
+
 document.getElementById('zipBtn').addEventListener('click', async ()=>{
   if(!lastPlainPrompt){ toast('Build a prompt first'); return; }
   if(typeof JSZip === 'undefined'){ toast('ZIP tool failed to load — check your connection'); return; }
@@ -1331,13 +1492,6 @@ document.getElementById('zipBtn').addEventListener('click', async ()=>{
     const zip = new JSZip();
     let anySkipped = false;
 
-    async function fetchWithExtFallback(src){
-      const candidates = [src, ...PHOTO_EXT_FALLBACKS.map(ext => src.replace(/\.(jpg|jpeg|png|webp)(\?.*)?$/i, '') + ext)];
-      for(const url of candidates){
-        try{ const res = await fetch(url); if(res.ok) return res; }catch(e){ /* try next */ }
-      }
-      return null;
-    }
     async function addPhotoToFolder(folder, src, filename){
       if(!src) return;
       try{
@@ -1465,6 +1619,91 @@ document.getElementById('saveSettingsBtn').addEventListener('click', ()=>{
 });
 
 /* ---- Export / import the whole setup as a plain JSON file (real persistence, works anywhere) ---- */
+/* ============================================================ STANDALONE SKILL SHEETS
+   Reference documents, not tied to any single generation — download once, keep forever. */
+const CARTOON_VIDEO_SKILL = `BALALAHOP — CARTOON VIDEO PRODUCTION SKILL
+A reference sheet for consistent, professional 3D cartoon generation with Google Flow.
+
+1. CHARACTER CONSISTENCY & ACCURACY
+- Every character must match their reference photo exactly: same proportions, colors, markings, and design in every single shot, from the first frame to the last.
+- Never let a character's design "drift" between shots — same face, same body shape, same outfit or fur pattern throughout the entire piece, including across separate 8-second parts of a longer video.
+- If a character wears an ID tag, keep it visible and legible in every shot meant to feature it — not just some. A tag that appears and disappears breaks the illusion.
+- Minimum acceptable visual match to the reference photos: 89% across the whole video. Regenerate any shot that falls short rather than deliver it as-is.
+
+2. SMOOTH CAMERA WORK
+- Prefer slow, deliberate camera moves (gentle push-ins, soft pans, slight arcs) over sudden whip pans or jump cuts.
+- Use "jump to new setting" and "extend the clip" features rather than regenerating from scratch — this preserves camera continuity and character position between shots.
+- Keep framing consistent within a scene: don't jump between wildly different focal lengths shot-to-shot unless the story calls for it.
+- Hold key emotional beats (reactions, punchlines, reveals) for at least a full second before cutting — give the moment room to land.
+
+3. SMOOTH ANIMATION & MOVEMENT
+- Motion should read as weighted and natural: characters accelerate and decelerate smoothly rather than snapping between poses.
+- Avoid limbs or objects clipping through each other or the environment.
+- Idle moments should still have subtle motion (breathing, ear twitches, tail movement) — stillness should never look frozen.
+- Match the energy of the movement to the mood and vibe selected for the scene (a "calm" mood moves slower and softer than an "excited" one).
+
+4. 3D CARTOON STYLE ACCURACY
+- Stay within the Style Bible's render description on every shot: soft subsurface scattering, gentle global illumination, soft shadows — never flat, never photorealistic.
+- Keep the color palette consistent with the Style Bible across every background and character, adjusted only by the chosen time-of-day lighting.
+- Textures (fur, fabric, hair) should stay detailed and consistent in resolution and style shot-to-shot — no shots that look noticeably lower-detail than others.
+
+5. DIALOGUE & PACING
+- Follow the dialogue lines exactly as written, assigned to the correct character, with the specified emotion driving their delivery and expression.
+- Give each line enough time to be readable/hearable before cutting away — don't rush spoken moments.
+- Keep unscripted moments purely visual (reactions, physical comedy) rather than inventing new dialogue not in the script.
+
+6. BACKGROUND ACCURACY
+- Match the attached background reference photo exactly — same layout, same colors, same key objects in the same places.
+- Keep the background consistent across every shot in the same scene; only change it at an explicit scene transition.
+- Respect the "starting" and "ending" background order when a video moves through more than one location.`;
+
+const SCRIPT_DRAMA_SKILL = `BALALAHOP — SCRIPT WRITING & DRAMA SKILL
+A reference sheet for hooks, suspense, and cliffhangers in short-form (8-second-part) content.
+
+1. THE HOOK (first 1–2 seconds)
+- Open on the most visually interesting moment you have — not a slow build-up. A question, a surprising object, or a strong reaction shot works better than an establishing shot.
+- Ask a silent question the viewer wants answered: "what's in the box?", "why is he hiding?", "what's about to happen?"
+- Avoid explaining anything in the first beat — show, don't tell, and let curiosity do the work.
+
+2. BUILDING SUSPENSE
+- Withhold the payoff by one beat longer than feels comfortable — the pause right before a reveal is where tension lives.
+- Use reaction shots (wide eyes, a freeze, a held breath) to mirror what you want the viewer to feel.
+- Small, escalating stakes work better than one big twist: a sound, then a shadow, then the reveal — not all three at once.
+- Silence or a held shot can build tension just as well as movement — don't fill every second with action.
+
+3. CLIFFHANGERS & PART-TO-PART CONTINUITY
+- When a script splits across multiple 8-second parts, end each part on an open question, not a resolution — save the payoff for the start of the next part.
+- A good cliffhanger beat: a reaction before the cause is shown, a door starting to open, a character mid-gasp, an object about to fall.
+- Start the next part by paying off exactly what the last part promised — don't skip past it or change the subject.
+- The very last part of a video should resolve the throughline, but can still end on a small final beat (a wink, a punchline, a look to camera) rather than fading out flatly.
+
+4. ENDINGS THAT LAND
+- A strong ending is either a punchline (comedy), a warm resolution (heart), or a small twist (surprise) — pick one on purpose rather than just stopping.
+- Callback the opening hook if you can — answering the exact question you opened with gives a satisfying sense of closure.
+- Leave the very last frame clean and holdable — a clear pose or expression the viewer's eye can rest on, not a mid-motion blur.
+
+5. QUICK STRUCTURE TEMPLATE (for an 8-second part)
+- 0:00–0:02 — Hook: the most interesting visual first.
+- 0:02–0:05 — Build: escalate curiosity or stakes, one small beat at a time.
+- 0:05–0:07 — Turn: the reveal, reaction, or punchline.
+- 0:07–0:08 — Land: a clean final beat, or a cliffhanger into the next part.`;
+
+function downloadTextFile(text, filename){
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('downloadCartoonSkillBtn').addEventListener('click', ()=>{
+  downloadTextFile(CARTOON_VIDEO_SKILL, 'balalahop-cartoon-video-skill.txt');
+  toast('🎬 Downloaded');
+});
+document.getElementById('downloadScriptSkillBtn').addEventListener('click', ()=>{
+  downloadTextFile(SCRIPT_DRAMA_SKILL, 'balalahop-script-drama-skill.txt');
+  toast('✍️ Downloaded');
+});
+
 function buildConfigObject(){
   return {
     savedAt: new Date().toISOString(),
